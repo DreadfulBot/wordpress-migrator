@@ -55,16 +55,28 @@ class DatabaseMigrator
         }
     }
 
+    private function remove_trailing_slash($string)
+    {
+        $result = $string;
+        if (substr($string, -1) == '/') {
+            $result = substr($string, 0, -1);
+        }
+        return $result;
+    }
+
     public function migrate_domain($old_domain, $new_domain, $prefix)
     {
-        $wp_options_command = "UPDATE %soptions SET option_value = replace(option_value, %s, %s) WHERE option_name = 'home' OR option_name = 'siteurl'";
-        $wp_posts_command_1 = "UPDATE %sposts SET guid = replace(guid, %s, %s)";
-        $wp_posts_command_2 = "UPDATE %sposts SET post_content = replace(post_content, %s, %s)";
-        $wp_postmeta_command = "UPDATE %spostmeta SET meta_value = replace(meta_value, %s, %s)";
+        $wp_options_command = "UPDATE %soptions SET option_value = replace(option_value, '%s', '%s') WHERE option_name = 'home' OR option_name = 'siteurl'";
+        $wp_posts_command_1 = "UPDATE %sposts SET guid = replace(guid, '%s', '%s')";
+        $wp_posts_command_2 = "UPDATE %sposts SET post_content = replace(post_content, '%s', '%s')";
+        $wp_postmeta_command = "UPDATE %spostmeta SET meta_value = replace(meta_value, '%s', '%s')";
 
         foreach ([$wp_options_command, $wp_posts_command_1, $wp_posts_command_2, $wp_postmeta_command] as $key => $command) {
-            if ($this->mysqli->query(sprintf($command, $prefix, $old_domain, $new_domain)) === true) {
+            $command = sprintf($command, $prefix, $this->remove_trailing_slash($old_domain), $this->remove_trailing_slash($new_domain));
+            if ($this->mysqli->query($command) === true) {
                 printf("[x] Replacement for idx %d successes\n", $key);
+            } else {
+                printf("[x] Cannot replace data for idx %d\n", $key);
             }
         }
     }

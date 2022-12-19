@@ -36,7 +36,7 @@ try {
     $domain_old = $_ENV['DOMAIN_OLD'];
     $domain_new = $_ENV['DOMAIN_NEW'];
 
-    $copy_candidates = $migrator->find_tables_by_prefix($prefix_new);
+    $copy_candidates = $migrator->find_tables_by_prefix($prefix_old);
     $migrator->delete_tables_by_prefix($prefix_new);
 
     $migrator->copy_tables($copy_candidates, $prefix_old, $prefix_new);
